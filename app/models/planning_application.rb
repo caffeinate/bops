@@ -445,9 +445,10 @@ class PlanningApplication < ApplicationRecord
   end
 
   def proposal_details
-    Array(super).each_with_index.map do |hash, index|
-      ProposalDetail.new(hash, index)
-    end
+    data = super
+    return [] unless data.is_a?(Array)
+
+    data.each_with_index.map { |hash, index| ProposalDetail.new(hash, index) }
   end
 
   def flagged_proposal_details

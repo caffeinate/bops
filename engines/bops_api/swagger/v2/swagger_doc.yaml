@@ -21308,6 +21308,193 @@ components:
       - files
       - metadata
       type: object
+    OdpSubmission:
+      type: object
+      description: ODP-format planning application submission
+      required:
+      - application
+      - site-details
+      - proposal-details
+      properties:
+        _metadata:
+          type: object
+          properties:
+            schema:
+              type: string
+        application:
+          type: object
+          required:
+          - application-types
+          - submission-date
+          properties:
+            reference:
+              type: string
+            application-types:
+              type: array
+              items:
+                type: string
+              example:
+              - hh
+            planning-authority:
+              type: string
+            submission-date:
+              type: string
+              format: date
+            documents:
+              type: array
+              items:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                  name:
+                    type: string
+                  document-types:
+                    type: array
+                    items:
+                      type: string
+                  uploaded-date:
+                    type: string
+                    format: date
+                  file:
+                    type: object
+                    required:
+                    - filename
+                    properties:
+                      filename:
+                        type: string
+        site-details:
+          type: object
+          required:
+          - site-locations
+          properties:
+            site-locations:
+              type: array
+              items:
+                type: object
+                properties:
+                  address-text:
+                    type: string
+                  postcode:
+                    type: string
+        proposal-details:
+          type: object
+          properties:
+            description:
+              type: string
+            proposal-started:
+              type: boolean
+            proposal-completed:
+              type: boolean
+        applicant-details:
+          type: object
+          properties:
+            applicants:
+              type: array
+              items:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                  person:
+                    type: object
+                    properties:
+                      first-name:
+                        type: string
+                      last-name:
+                        type: string
+                      address-text:
+                        type: string
+        applicant-contact:
+          type: object
+          properties:
+            applicant-reference:
+              type: string
+            contact-details:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                phone-numbers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      number:
+                        type: string
+                      contact-priority:
+                        type: string
+        agent-details:
+          type: object
+          properties:
+            agent:
+              type: object
+              properties:
+                reference:
+                  type: string
+                person:
+                  type: object
+                  properties:
+                    first-name:
+                      type: string
+                    last-name:
+                      type: string
+                    address-text:
+                      type: string
+        agent-contact:
+          type: object
+          properties:
+            agent-reference:
+              type: string
+            contact-details:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                phone-numbers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      number:
+                        type: string
+                      contact-priority:
+                        type: string
+        access-rights-of-way:
+          type: object
+          additionalProperties: true
+        bng:
+          type: object
+          additionalProperties: true
+        checklist:
+          type: object
+          additionalProperties: true
+        conflict-of-interest:
+          type: object
+          additionalProperties: true
+        declaration:
+          type: object
+          additionalProperties: true
+        materials:
+          type: object
+          additionalProperties: true
+        ownership-certs:
+          type: object
+          additionalProperties: true
+        parking:
+          type: object
+          additionalProperties: true
+        pre-app-advice:
+          type: object
+          additionalProperties: true
+        site-visit:
+          type: object
+          additionalProperties: true
+        trees-hedges:
+          type: object
+          additionalProperties: true
     SubmissionResponse:
       type: object
       properties:
@@ -23308,6 +23495,179 @@ paths:
                       message: Unauthorized
               schema:
                 "$ref": "#/components/schemas/UnauthorizedError"
+  "/api/v2/odp_planning_applications":
+    post:
+      summary: Creates a new planning application from an ODP-format payload
+      tags:
+      - Planning applications
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: send_email
+        in: query
+        required: false
+        schema:
+          enum:
+          - 'true'
+          - 'false'
+          default: 'true'
+      responses:
+        '200':
+          description: with a valid request
+          content:
+            application/json:
+              examples:
+                Householder planning permission:
+                  value:
+                    id: BUC-25-00001-HAPP
+                    message: Application successfully created
+              schema:
+                "$ref": "#/components/schemas/SubmissionResponse"
+        '400':
+          description: with an invalid request
+          content:
+            application/json:
+              examples:
+                default:
+                  value:
+                    error:
+                      code: 400
+                      message: Bad Request
+                      detail: We couldn't process your request because some information
+                        is missing or incorrect.
+              schema:
+                "$ref": "#/components/schemas/BadRequestError"
+        '401':
+          description: with missing or invalid credentials
+          content:
+            application/json:
+              examples:
+                default:
+                  value:
+                    error:
+                      code: 401
+                      message: Unauthorized
+              schema:
+                "$ref": "#/components/schemas/UnauthorizedError"
+        '422':
+          description: when an application is invalid
+          content:
+            application/json:
+              examples:
+                default:
+                  value:
+                    error:
+                      code: 422
+                      message: Unprocessable Entity
+                      detail: Planning application is invalid
+              schema:
+                "$ref": "#/components/schemas/UnprocessableEntityError"
+        '500':
+          description: when an internal server error occurs
+          content:
+            application/json:
+              examples:
+                default:
+                  value:
+                    error:
+                      code: 500
+                      message: Internal Server Error
+                      detail: Couldn't connect to the database
+              schema:
+                "$ref": "#/components/schemas/InternalServerError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/OdpSubmission"
+            examples:
+              householder:
+                summary: Householder planning permission
+                value:
+                  _metadata:
+                    schema: TBC
+                  application:
+                    reference: HH/2025/001
+                    application-types:
+                    - hh
+                    planning-authority: local-authority:RUN
+                    submission-date: '2025-09-17'
+                    documents:
+                    - reference: DOC-001
+                      name: Location Plan
+                      document-types:
+                      - location-plan
+                      uploaded-date: '2025-09-17'
+                      file:
+                        filename: location-plan.pdf
+                  access-rights-of-way:
+                    new-altered-vehicle: 'false'
+                    new-altered-pedestrian: 'false'
+                    change-right-of-way: 'false'
+                  agent-contact:
+                    agent-reference: AGT-001
+                    contact-details:
+                      email: john.smith@smithplanning.co.uk
+                      phone-numbers:
+                      - number: "+44 20 7123 4567"
+                        contact-priority: primary
+                  agent-details:
+                    agent:
+                      reference: AGT-001
+                      person:
+                        first-name: John
+                        last-name: Smith
+                        address-text: 123 High Street, London
+                  applicant-contact:
+                    applicant-reference: APL-001
+                    contact-details:
+                      email: jane.doe@example.com
+                      phone-numbers:
+                      - number: '07700900123'
+                        contact-priority: primary
+                  applicant-details:
+                    applicants:
+                    - reference: APL-001
+                      person:
+                        first-name: Jane
+                        last-name: Doe
+                        address-text: 123 High Street, London
+                  bng:
+                    bng-exempt: true
+                  checklist:
+                    national-req-types:
+                    - location-plan
+                  conflict-of-interest:
+                    conflict-to-declare: false
+                  declaration:
+                    name: Jane Doe
+                    declaration-confirmed: true
+                    declaration-date: '2025-09-17'
+                  materials:
+                    building-elements:
+                    - building-element-type: walls
+                    providing-additional-material-information: false
+                  ownership-certs:
+                    sole-owner: true
+                    agricultural-tenants: false
+                  parking:
+                    is-existing-parking-affected: false
+                  pre-app-advice:
+                    advice-sought: false
+                  proposal-details:
+                    description: Single-storey rear extension.
+                    proposal-started: false
+                    proposal-completed: false
+                  site-details:
+                    site-locations:
+                    - address-text: 123 High Street, London
+                      postcode: SW1A 1AA
+                  site-visit:
+                    can-be-seen-from: true
+                    contact-type: applicant
+                  trees-hedges:
+                    has-falling-trees-risk: false
+                    tree-removal: false
   "/api/v2/planning_applications":
     post:
       summary: Creates a new plannning application
